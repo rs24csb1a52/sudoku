@@ -1,0 +1,158 @@
+!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Game of 15 (1D Array)</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; margin-top: 20px; }
+    .puzzle-grid { 
+      display: grid; 
+      grid-template-columns: repeat(4, 60px); 
+      grid-gap: 2px; 
+      background: #000; 
+      padding: 2px; 
+      width: fit-content; 
+      margin: 20px auto;
+    }
+    .tile { 
+      width: 60px; 
+      height: 60px; 
+      background: #fff; 
+      border: none; 
+      text-align: center; 
+      font-size: 24px; 
+      line-height: 60px; 
+      cursor: pointer; 
+    }
+    .tile.empty { 
+      background: #ccc; 
+      cursor: default; 
+    }
+    .tile.correct { background: #d4edda; }
+    .tile.incorrect { background: #f8d7da; }
+    button { 
+      padding: 10px 20px; 
+      margin: 5px; 
+      font-size: 16px; 
+      cursor: pointer; 
+    }
+  </style>
+</head>
+<body>
+  <h1>Game of 15</h1>
+  <div id="puzzleGrid" class="puzzle-grid"></div>
+  <div>
+    <button onclick="generatePuzzle()">Generate Puzzle</button>
+    <button onclick="checkSolution()">Submit Solution</button>
+    <button onclick="showSolution()">Show Solution</button>
+  </div>
+
+  <script>
+    // Pre-defined solved 1D array (0 is empty)
+    const solution = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0];
+
+    // Global state
+    let puzzle = [];
+
+    // Initialize grid UI
+    function initGrid() {
+      const grid = document.getElementById('puzzleGrid');
+      grid.innerHTML = '';
+      for (let i = 0; i < 16; i++) {
+        const tile = document.createElement('div');
+        tile.classList.add('tile');
+        tile.onclick = () => moveTile(i);
+        grid.appendChild(tile);
+      }
+      displayGrid(puzzle);
+    }
+
+    // Move tile if adjacent to empty space
+    function moveTile(index) {
+      const emptyIndex = puzzle.indexOf(0);
+      const row = Math.floor(index / 4);
+      const col = index % 4;
+      const emptyRow = Math.floor(emptyIndex / 4);
+      const emptyCol = emptyIndex % 4;
+
+      // Check if tile is adjacent to empty space
+      if ((Math.abs(row - emptyRow) === 1 && col === emptyCol) || 
+          (Math.abs(col - emptyCol) === 1 && row === emptyRow)) {
+        // Swap tile with empty space
+        [puzzle[index], puzzle[emptyIndex]] = [puzzle[emptyIndex], puzzle[index]];
+        displayGrid(puzzle);
+      }
+    }
+
+    // Generate shuffled puzzle
+    function generatePuzzle() {
+      puzzle = [...solution]; // Copy solution
+      do {
+        shufflePuzzle();
+      } while (!isSolvable(puzzle));
+      displayGrid(puzzle);
+    }
+
+    // Shuffle puzzle array
+    function shufflePuzzle() {
+      for (let i = puzzle.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [puzzle[i], puzzle[j]] = [puzzle[j], puzzle[i]];
+      }
+    }
+
+    // Check if puzzle is solvable (inversion count)
+    function isSolvable(arr) {
+      let inversions = 0;
+      for (let i = 0; i < arr.length - 1; i++) {
+        for (let j = i + 1; j < arr.length; j++) {
+          if (arr[i] > arr[j] && arr[i] !== 0 && arr[j] !== 0) {
+            inversions++;
+          }
+        }
+      }
+      return inversions % 2 === 0;
+    }
+
+    // Display grid in UI
+    function displayGrid(arr) {
+      const tiles = document.querySelectorAll('.tile');
+      tiles.forEach((tile, index) => {
+        const value = arr[index];
+        tile.textContent = value || '';
+        tile.classList.toggle('empty', value === 0);
+        tile.classList.remove('correct', 'incorrect');
+      });
+    }
+
+    // Check user's solution
+    function checkSolution() {
+      const tiles = document.querySelectorAll('.tile');
+      let isCorrect = true;
+      tiles.forEach((tile, index) => {
+        const userValue = puzzle[index];
+        const correctValue = solution[index];
+        if (userValue !== correctValue) {
+          tile.classList.add('incorrect');
+          tile.classList.remove('correct');
+          isCorrect = false;
+        } else {
+          tile.classList.add('correct');
+          tile.classList.remove('incorrect');
+        }
+      });
+      alert(isCorrect ? 'Congratulations! Puzzle solved correctly!' : 'Oops! Puzzle is not solved.');
+    }
+
+    // Show the solved puzzle
+    function showSolution() {
+      puzzle = [...solution];
+      displayGrid(solution);
+    }
+
+    // Initialize
+    initGrid();
+    generatePuzzle();
+  </script>
+</body>
+</html>
